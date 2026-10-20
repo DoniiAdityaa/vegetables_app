@@ -27,10 +27,10 @@ Future<void> setUpLocator() async {
       persistentConnection: false,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        "x-api-key": Env.apiKey,
-        'Authorization':
-            'Bearer ${serviceLocator.get<UserPreference>().getToken()}',
+        // 'Accept': 'application/json',
+        // "x-api-key": Env.apiKey,
+        // 'Authorization':
+        //     'Bearer ${serviceLocator.get<UserPreference>().getToken()}',
       },
     );
 
