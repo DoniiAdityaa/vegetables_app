@@ -9,6 +9,10 @@ class AppTheme {
     return ThemeData(
       fontFamily: "Poppins",
       useMaterial3: true,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      splashFactory: NoSplash.splashFactory,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: primaryColor,
@@ -55,6 +59,10 @@ class AppTheme {
     return ThemeData(
       fontFamily: "Poppins",
       useMaterial3: true,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      splashFactory: NoSplash.splashFactory,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: primaryColor,

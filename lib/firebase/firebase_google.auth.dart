@@ -36,8 +36,7 @@ class FirebaseGoogleAuth {
       try {
         await _googleSignIn.signOut();
       } catch (e) {
-        debugPrint(e.toString());
-        onError(e.toString());
+        debugPrint("Pre-signin signout note: $e");
       }
 
       final GoogleSignInAccount? googleSignInAccount = await _googleSignIn
@@ -88,6 +87,19 @@ class FirebaseGoogleAuth {
       }
       debugPrint(error.toString());
       onError(error.toString());
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      debugPrint("Error signing out Google: $e");
+    }
+    try {
+      await _firebaseAuth.signOut();
+    } catch (e) {
+      debugPrint("Error signing out FirebaseAuth: $e");
     }
   }
 

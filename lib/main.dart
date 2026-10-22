@@ -1,11 +1,22 @@
+import 'dart:ui';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:vegetables_app/auth/auth_gate.dart';
 import 'package:vegetables_app/config/service_locator.dart';
-import 'package:vegetables_app/feature/login/login_screen.dart';
+import 'package:vegetables_app/firebase_options.dart';
 import 'package:vegetables_app/ui/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await setUpLocator();
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
 
   runApp(const MyApp());
 }
@@ -19,7 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Vegetables App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const LoginScreen(),
+      home: const AuthGate(),
     );
   }
 }

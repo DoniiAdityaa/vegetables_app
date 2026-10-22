@@ -20,6 +20,10 @@ final ElevatedButtonThemeData elevatedButtonThemeData = ElevatedButtonThemeData(
     disabledBackgroundColor: bgDisabled,
     textStyle: xsMedium,
     minimumSize: const Size(0, 0),
+    splashFactory: NoSplash.splashFactory,
+    shadowColor: Colors.transparent,
+  ).copyWith(
+    overlayColor: WidgetStateProperty.all(Colors.transparent),
   ),
 );
 
@@ -35,6 +39,9 @@ final OutlinedButtonThemeData outlinedButtonThemeData = OutlinedButtonThemeData(
     foregroundColor: textNeutralPrimary,
     textStyle: xsMedium,
     minimumSize: const Size(0, 0),
+    splashFactory: NoSplash.splashFactory,
+  ).copyWith(
+    overlayColor: WidgetStateProperty.all(Colors.transparent),
   ),
 );
 
@@ -112,6 +119,9 @@ TextButtonThemeData textButtonThemeData = TextButtonThemeData(
   style: TextButton.styleFrom(
     foregroundColor: textButtonSecondaryDefault,
     textStyle: sMedium,
+    splashFactory: NoSplash.splashFactory,
+  ).copyWith(
+    overlayColor: WidgetStateProperty.all(Colors.transparent),
   ),
 );
 

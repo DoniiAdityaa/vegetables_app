@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:vegetables_app/config/service_locator.dart';
+import 'package:vegetables_app/config/user_preference.dart';
 import 'package:vegetables_app/feature/login/login_screen.dart';
 import 'package:vegetables_app/feature/profile/edit_profile_screen.dart';
 import 'package:vegetables_app/feature/profile/faq_screen.dart';
@@ -14,11 +18,52 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _userName = 'Doni Aditya Pratama';
-  String _userEmail = 'doniaditya004@gmail.com';
+  String _userName = 'Pengguna VegBox';
+  String _userEmail = '';
   String _userPhone = '+62 812-3456-7890';
   String _userAddress =
       'Jl. Nakula I No. 5-11, Pendrikan Kidul, Semarang Tengah';
+  String? _userPhotoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final user = FirebaseAuth.instance.currentUser;
+    final userPref = serviceLocator.get<UserPreference>();
+
+    if (user != null) {
+      setState(() {
+        if (user.displayName != null && user.displayName!.isNotEmpty) {
+          _userName = user.displayName!;
+        } else if (userPref.getUserName() != null &&
+            userPref.getUserName()!.isNotEmpty) {
+          _userName = userPref.getUserName()!;
+        }
+
+        if (user.email != null && user.email!.isNotEmpty) {
+          _userEmail = user.email!;
+        } else if (userPref.getUserEmail() != null &&
+            userPref.getUserEmail()!.isNotEmpty) {
+          _userEmail = userPref.getUserEmail()!;
+        }
+
+        _userPhotoUrl = user.photoURL;
+      });
+    }
+  }
+
+  String get _initials {
+    if (_userName.trim().isEmpty) return 'VB';
+    final parts = _userName.trim().split(RegExp(r'\s+'));
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+  }
 
   void _navigateToEditProfile() async {
     final result = await Navigator.push<Map<String, String>>(
@@ -46,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -88,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogCtx),
               child: Text(
                 'Batal',
                 style: sSemiBold.copyWith(
@@ -98,8 +143,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+
+                try {
+                  await GoogleSignIn().signOut();
+                } catch (_) {}
+                try {
+                  await FirebaseAuth.instance.signOut();
+                } catch (_) {}
+                try {
+                  await serviceLocator.get<UserPreference>().clearData();
+                } catch (_) {}
+
+                if (!mounted) return;
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -216,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                // Avatar Inisial Bulat
+                // Avatar Inisial Bulat / Foto Profil
                 Container(
                   width: 58,
                   height: 58,
@@ -224,13 +281,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: pastelMint,
                     shape: BoxShape.circle,
                     border: Border.all(color: primaryColor, width: 2),
+                    image: _userPhotoUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(_userPhotoUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  child: Center(
-                    child: Text(
-                      'DA',
-                      style: xlBold.copyWith(color: primaryColor),
-                    ),
-                  ),
+                  child: _userPhotoUrl == null
+                      ? Center(
+                          child: Text(
+                            _initials,
+                            style: xlBold.copyWith(
+                              color: primaryColor,
+                              fontSize: 18,
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 14),
 
