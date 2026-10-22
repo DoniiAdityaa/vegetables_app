@@ -258,7 +258,7 @@ packages:
     source: hosted
     version: "2.2.2"
   envied:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: envied
       sha256: f6b7f3c3b65819adc80f59680aa1890f17c8e584027af010819339cf18d8b29f

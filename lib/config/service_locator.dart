@@ -8,7 +8,6 @@ import 'package:vegetables_app/config/user_preference.dart';
 
 import '../data/api/api_service.dart';
 import 'constant.dart';
-import 'env/env.dart';
 
 /// Global [GetIt.instance].
 final GetIt serviceLocator = GetIt.instance;
