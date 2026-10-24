@@ -20,3 +20,12 @@ const double imageMaxWidth = 720;
 enum SnackBarPosition { top, bottom }
 
 enum DatePickerType { day, range }
+
+/// Vegetable Categories
+const List<String> vegetableCategories = [
+  'Semua',
+  'Sayuran Daun',
+  'Sayuran Buah',
+  'Sayuran Umbi',
+  'Sayuran Polong',
+];

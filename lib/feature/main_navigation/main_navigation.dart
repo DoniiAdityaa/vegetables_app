@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vegetables_app/feature/cart/cart_screen.dart';
+import 'package:vegetables_app/feature/cart/cubit/cart_cubit.dart';
+import 'package:vegetables_app/feature/cart/cubit/cart_state.dart';
 import 'package:vegetables_app/feature/home/home_screen.dart';
 import 'package:vegetables_app/feature/notification/notification_screen.dart';
 import 'package:vegetables_app/feature/orders/order_history_screen.dart';
 import 'package:vegetables_app/feature/profile/profile_screen.dart';
 import 'package:vegetables_app/ui/color.dart';
-import 'package:vegetables_app/ui/typography.dart';
 
 class MainNavigation extends StatefulWidget {
   final int initialIndex;
@@ -59,7 +62,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _pages = const [
     HomeScreen(),
     NotificationScreen(),
-    _BasketPlaceholderPage(),
+    CartScreen(),
     OrderHistoryScreen(),
     ProfileScreen(),
   ];
@@ -192,145 +195,65 @@ class _MainNavigationState extends State<MainNavigation> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => setState(() => _currentIndex = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutBack,
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: primaryColor,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: isSelected ? 0.45 : 0.28),
-              blurRadius: isSelected ? 14 : 8,
-              offset: const Offset(0, 4),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: primaryColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withValues(alpha: isSelected ? 0.45 : 0.28),
+                  blurRadius: isSelected ? 14 : 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Center(
-          child: SvgPicture.asset(
-            'assets/svg/basket.svg',
-            width: 22,
-            height: 22,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/svg/basket.svg',
+                width: 22,
+                height: 22,
+                colorFilter:
+                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// ============================================================================
-/// PLACEHOLDER PAGES (Untuk Pesanan, Keranjang, Kategori, dan Profil)
-/// ============================================================================
-
-class _BasketPlaceholderPage extends StatelessWidget {
-  const _BasketPlaceholderPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Keranjang Belanja',
-          style: sBold.copyWith(color: textNeutralPrimary),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF2EC),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/svg/basket.svg',
-                  width: 38,
-                  height: 38,
-                  colorFilter: const ColorFilter.mode(
-                    primaryColor,
-                    BlendMode.srcIn,
+          BlocBuilder<CartCubit, CartState>(
+            builder: (context, state) {
+              if (state.totalItems == 0) return const SizedBox.shrink();
+              return Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEF4444),
+                    shape: BoxShape.circle,
+                  ),
+                  constraints:
+                      const BoxConstraints(minWidth: 18, minHeight: 18),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${state.totalItems}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1.0,
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Keranjang Masih Kosong', style: sBold.copyWith(fontSize: 16)),
-            const SizedBox(height: 6),
-            Text(
-              'Pilih sayur segar favoritmu di Beranda.',
-              style: sRegular.copyWith(color: const Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
-
-// ignore: unused_element
-class _CategoryPlaceholderPage extends StatelessWidget {
-  const _CategoryPlaceholderPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Kategori Sayuran',
-          style: sBold.copyWith(color: textNeutralPrimary),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E6),
-                borderRadius: BorderRadius.circular(36),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/svg/category.svg',
-                  width: 32,
-                  height: 32,
-                  colorFilter: const ColorFilter.mode(
-                    secondaryColor,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Semua Kategori', style: sBold.copyWith(fontSize: 16)),
-            const SizedBox(height: 6),
-            Text(
-              'Sayur Daun, Buah, Umbi, dan Paket Masak.',
-              style: sRegular.copyWith(color: const Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

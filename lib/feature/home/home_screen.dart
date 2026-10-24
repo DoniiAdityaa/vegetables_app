@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:vegetables_app/config/constant.dart';
+import 'package:vegetables_app/feature/cart/cubit/cart_cubit.dart';
 import 'package:vegetables_app/feature/detail/detail_screen.dart';
-import 'package:vegetables_app/feature/main_navigation/main_navigation.dart';
+import 'package:vegetables_app/feature/favorite/cubit/favorite_cubit.dart';
+import 'package:vegetables_app/feature/favorite/cubit/favorite_state.dart';
+import 'package:vegetables_app/feature/favorite/favorite_screen.dart';
+import 'package:vegetables_app/feature/home/cubit/category_cubit.dart';
+import 'package:vegetables_app/feature/home/cubit/vegetable_cubit.dart';
+import 'package:vegetables_app/model/vegetable_model/vegetable_model.dart';
 import 'package:vegetables_app/ui/color.dart';
 import 'package:vegetables_app/ui/typography.dart';
 
@@ -12,76 +21,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
   int _selectedCategoryIndex = 0;
+  String _selectedCategoryName = 'Semua';
 
-  final List<String> _categories = [
-    'Semua',
-    'Sayur Daun',
-    'Sayur Buah',
-    'Sayur Umbi',
-    'Organik',
-    'Paket Masak',
-    'Bumbu Dapur',
-  ];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  final List<Map<String, dynamic>> _products = [
-    {
-      'name': 'Bayam Hijau Organik',
-      'category': 'Sayur Daun',
-      'tag': '100% Organik',
-      'tagColor': primaryColor,
-      'tagBg': pastelMint,
-      'unit': '250 gram / ikat',
-      'price': 4500,
-      'originalPrice': 6000,
-      'rating': 4.9,
-      'sold': '120+ terjual',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Wortel Manis Brastagi',
-      'category': 'Sayur Umbi',
-      'tag': 'Panen Baru',
-      'tagColor': secondaryColor600,
-      'tagBg': pastelOrange,
-      'unit': '500 gram / pack',
-      'price': 8500,
-      'originalPrice': 10000,
-      'rating': 4.8,
-      'sold': '85 terjual',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Tomat Cherry Hidroponik',
-      'category': 'Sayur Buah',
-      'tag': 'Segar',
-      'tagColor': Color(0xFFDC2626),
-      'tagBg': pastelRed,
-      'unit': '250 gram / pack',
-      'price': 12000,
-      'originalPrice': null,
-      'rating': 5.0,
-      'sold': '60+ terjual',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1546470427-0d4db154ceb7?w=500&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Brokoli Hijau Segar',
-      'category': 'Sayur Daun',
-      'tag': 'Bebas Pestisida',
-      'tagColor': primaryColor,
-      'tagBg': pastelMint,
-      'unit': '1 bonggol (~400 gr)',
-      'price': 14000,
-      'originalPrice': 16500,
-      'rating': 4.9,
-      'sold': '94 terjual',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=500&auto=format&fit=crop&q=80',
-    },
-  ];
+  void _fetchVegetables({String? search, String? category}) {
+    final cat = category ?? _selectedCategoryName;
+    final query = (search ?? _searchController.text).trim();
+
+    context.read<VegetableCubit>().getVegetables(
+      kategori: (cat == 'Semua') ? null : cat,
+      cari: query.isNotEmpty ? query : null,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,41 +54,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // 2. MAIN SCROLLABLE CONTENT
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
+              child: RefreshIndicator(
+                color: primaryColor,
+                backgroundColor: Colors.white,
+                onRefresh: () async {
+                  context.read<CategoryCubit>().getCategories();
+                  _fetchVegetables();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 32),
 
-                    // 2A. SEARCH BAR CAPSULE
-                    _buildSearchBar(),
+                      // 2A. SEARCH BAR CAPSULE
+                      _buildSearchBar(),
 
-                    const SizedBox(height: 18),
+                      const SizedBox(height: 18),
 
-                    // 2B. HERO BANNER PROMO / INFO PANEN
-                    // _buildHeroBanner(),
-                    const SizedBox(height: 24),
+                      // 2C. KATEGORI PILIHAN (PASTEL TILES)
+                      _buildCategorySection(),
 
-                    // 2C. KATEGORI PILIHAN (PASTEL TILES)
-                    _buildCategorySection(),
+                      const SizedBox(height: 24),
 
-                    const SizedBox(height: 24),
+                      // 2D. SECTION PRODUK "PALING SEGAR HARI INI"
+                      _buildProductSectionHeader(),
 
-                    // 2D. SECTION PRODUK "PALING SEGAR HARI INI"
-                    _buildProductSectionHeader(),
+                      const SizedBox(height: 14),
 
-                    const SizedBox(height: 14),
+                      // 2E. GRID PRODUK SAYUR
+                      _buildProductGrid(),
 
-                    // 2E. GRID PRODUK SAYUR
-                    _buildProductGrid(),
+                      const SizedBox(height: 24),
 
-                    const SizedBox(height: 24),
-
-                    // 2F. BANNER PAKET MASAK HEMAT
-                    // _buildRecipePackBanner(),
-                    const SizedBox(height: 110),
-                  ],
+                      // 2F. BANNER PAKET MASAK HEMAT
+                      // _buildRecipePackBanner(),
+                      const SizedBox(height: 110),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -190,25 +154,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: textNeutralPrimary,
-                      size: 18,
-                    ),
                   ],
                 ),
               ],
             ),
           ),
 
-          // Tombol Notifikasi
-          _buildCircleIconButton(
-            icon: Icons.notifications_none_rounded,
-            onTap: () {
-              MainNavigation.switchToTab(context, 1);
+          // Tombol Favorit
+          BlocBuilder<FavoriteCubit, FavoriteState>(
+            builder: (context, favState) {
+              return _buildCircleIconButton(
+                icon: Icons.favorite_border_rounded,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FavoriteScreen(),
+                    ),
+                  );
+                },
+                badgeCount: favState.favorites.isNotEmpty
+                    ? favState.favorites.length
+                    : null,
+              );
             },
-            hasBadge: true,
           ),
         ],
       ),
@@ -300,27 +269,75 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                'Cari bayam, wortel, brokoli...',
-                style: sRegular.copyWith(
-                  color: const Color(0xFF94A3B8),
+              child: TextField(
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                style: sMedium.copyWith(
+                  color: textNeutralPrimary,
                   fontSize: 13,
                 ),
+                decoration: InputDecoration(
+                  hintText: 'Cari bayam, tomat, wortel...',
+                  hintStyle: sRegular.copyWith(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 13,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  filled: false,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onSubmitted: (val) => _fetchVegetables(search: val),
+                onChanged: (val) {
+                  if (val.isEmpty) {
+                    _fetchVegetables(search: '');
+                  }
+                  setState(() {});
+                },
               ),
             ),
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: const Icon(
-                Icons.tune_rounded,
-                color: textNeutralPrimary,
-                size: 16,
-              ),
-            ),
+            // if (_searchController.text.isNotEmpty)
+            //   GestureDetector(
+            //     behavior: HitTestBehavior.opaque,
+            //     onTap: () {
+            //       _searchController.clear();
+            //       setState(() {});
+            //       _fetchVegetables(search: '');
+            //     },
+            //     child: const Padding(
+            //       padding: EdgeInsets.symmetric(horizontal: 6),
+            //       child: Icon(
+            //         Icons.close_rounded,
+            //         color: Color(0xFF94A3B8),
+            //         size: 18,
+            //       ),
+            //     ),
+            //   ),
+            // Container(
+            //   width: 30,
+            //   height: 30,
+            //   decoration: BoxDecoration(
+            //     color: Colors.white,
+            //     borderRadius: BorderRadius.circular(15),
+            //   ),
+            //   child: Material(
+            //     color: Colors.transparent,
+            //     child: InkWell(
+            //       borderRadius: BorderRadius.circular(15),
+            //       onTap: () => _fetchVegetables(),
+            //       child: const Icon(
+            //         Icons.tune_rounded,
+            //         color: textNeutralPrimary,
+            //         size: 16,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -455,50 +472,65 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Kategori Pilihan',
                 style: sBold.copyWith(color: textNeutralPrimary, fontSize: 17),
               ),
-              Text(
-                'Lihat Semua',
-                style: sSemiBold.copyWith(color: primaryColor, fontSize: 12),
-              ),
             ],
           ),
         ),
         const SizedBox(height: 14),
         SizedBox(
           height: 38,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final catName = _categories[index];
-              final isSelected = _selectedCategoryIndex == index;
+          child: BlocBuilder<CategoryCubit, CategoryState>(
+            builder: (context, state) {
+              List<String> categories = vegetableCategories;
+              if (state is CategoryLoaded) {
+                categories = state.categories;
+              } else if (state is CategoryError) {
+                categories = state.fallbackCategories;
+              }
 
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  setState(() => _selectedCategoryIndex = index);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFD8F2E1)
-                        : const Color(0x00D8F2E1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    catName,
-                    style: (isSelected ? sSemiBold : sMedium).copyWith(
-                      color: isSelected
-                          ? textNeutralPrimary
-                          : const Color(0xFF94A3B8),
-                      fontSize: 13,
+              if (_selectedCategoryIndex >= categories.length) {
+                _selectedCategoryIndex = 0;
+              }
+
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: categories.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final catName = categories[index];
+                  final isSelected = _selectedCategoryIndex == index;
+
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        _selectedCategoryIndex = index;
+                        _selectedCategoryName = catName;
+                      });
+                      _fetchVegetables(category: catName);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFD8F2E1)
+                            : const Color(0x00D8F2E1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        catName,
+                        style: (isSelected ? sSemiBold : sMedium).copyWith(
+                          color: isSelected
+                              ? textNeutralPrimary
+                              : const Color(0xFF94A3B8),
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           ),
@@ -520,48 +552,59 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Paling Segar Hari Ini',
                 style: sBold.copyWith(color: textNeutralPrimary, fontSize: 17),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: pastelOrange,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'Subuh',
-                  style: sBold.copyWith(color: secondaryColor600, fontSize: 10),
-                ),
-              ),
             ],
-          ),
-          Text(
-            'Lihat Semua',
-            style: sSemiBold.copyWith(color: primaryColor, fontSize: 12),
           ),
         ],
       ),
     );
   }
 
-  List<Map<String, dynamic>> get _filteredProducts {
-    if (_selectedCategoryIndex == 0) return _products;
-    final selectedCat = _categories[_selectedCategoryIndex];
-    final filtered = _products
-        .where((p) => p['category'] == selectedCat)
-        .toList();
-    return filtered.isNotEmpty ? filtered : _products;
+  /// 2E. Grid Produk Sayur 2 Kolom dengan BLoC
+  Widget _buildProductGrid() {
+    return BlocBuilder<VegetableCubit, VegetableState>(
+      builder: (context, state) {
+        if (state is VegetableLoading) {
+          return _buildShimmerLoading();
+        } else if (state is VegetableError) {
+          return _buildErrorState(state.message);
+        } else if (state is VegetableLoaded) {
+          final items = state.vegetables;
+          if (items.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.72,
+              ),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildProductCard(item);
+              },
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
   }
 
-  /// 2E. Grid Produk Sayur 2 Kolom
-  Widget _buildProductGrid() {
-    final items = _filteredProducts;
-
+  Widget _buildShimmerLoading() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
+        itemCount: 4,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 14,
@@ -569,22 +612,181 @@ class _HomeScreenState extends State<HomeScreen> {
           childAspectRatio: 0.72,
         ),
         itemBuilder: (context, index) {
-          final item = items[index];
-          return _buildProductCard(item);
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F2),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(17),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 14,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 10,
+                        width: 70,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            height: 16,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE2E8F0),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> item) {
-    final imageUrl = item['imageUrl'] as String;
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: pastelMint,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                color: primaryColor,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Sayuran tidak ditemukan',
+              style: sBold.copyWith(color: textNeutralPrimary, fontSize: 15),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Coba cari dengan kata kunci lain atau pilih kategori berbeda.',
+              textAlign: TextAlign.center,
+              style: xsRegular.copyWith(color: const Color(0xFF94A3B8)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: pastelRed,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                color: Color(0xFFDC2626),
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Gagal Memuat Sayuran',
+              style: sBold.copyWith(color: textNeutralPrimary, fontSize: 15),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: xsRegular.copyWith(color: const Color(0xFF94A3B8)),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => _fetchVegetables(),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Coba Lagi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(VegetableModel item) {
+    final imageUrl = item.gambar;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => DetailScreen(product: item)),
+          MaterialPageRoute(
+            builder: (context) => DetailScreen(vegetable: item),
+          ),
         );
       },
       child: Container(
@@ -606,96 +808,85 @@ class _HomeScreenState extends State<HomeScreen> {
             // Gambar Produk & Badge
             Expanded(
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8FAF8),
-                      borderRadius: BorderRadius.vertical(
+                  Hero(
+                    tag: imageUrl,
+                    flightShuttleBuilder:
+                        (
+                          flightContext,
+                          animation,
+                          flightDirection,
+                          fromHeroContext,
+                          toHeroContext,
+                        ) {
+                          final BorderRadiusTween borderRadiusTween =
+                              BorderRadiusTween(
+                                begin: const BorderRadius.vertical(
+                                  top: Radius.circular(17),
+                                ),
+                                end: const BorderRadius.vertical(
+                                  bottom: Radius.circular(28),
+                                ),
+                              );
+
+                          final curvedAnimation = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeInOutCubic,
+                          );
+
+                          return AnimatedBuilder(
+                            animation: curvedAnimation,
+                            builder: (context, child) {
+                              return ClipRRect(
+                                borderRadius:
+                                    borderRadiusTween.evaluate(
+                                      curvedAnimation,
+                                    ) ??
+                                    BorderRadius.zero,
+                                child: Image.network(
+                                  imageUrl,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        color: const Color(0xFFF1F5F2),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.eco_rounded,
+                                            color: primaryColor,
+                                            size: 36,
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(17),
                       ),
-                    ),
-                    child: Hero(
-                      tag: imageUrl,
-                      flightShuttleBuilder:
-                          (
-                            flightContext,
-                            animation,
-                            flightDirection,
-                            fromHeroContext,
-                            toHeroContext,
-                          ) {
-                            final BorderRadiusTween borderRadiusTween =
-                                BorderRadiusTween(
-                                  begin: const BorderRadius.vertical(
-                                    top: Radius.circular(17),
-                                  ),
-                                  end: const BorderRadius.vertical(
-                                    bottom: Radius.circular(28),
-                                  ),
-                                );
-
-                            final curvedAnimation = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOutCubic,
-                            );
-
-                            return AnimatedBuilder(
-                              animation: curvedAnimation,
-                              builder: (context, child) {
-                                return ClipRRect(
-                                  borderRadius:
-                                      borderRadiusTween.evaluate(
-                                        curvedAnimation,
-                                      ) ??
-                                      BorderRadius.zero,
-                                  child: Image.network(
-                                    imageUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(17),
-                        ),
+                      child: Container(
+                        color: const Color(0xFFF8FAF8),
                         child: Image.network(
                           imageUrl,
+                          width: double.infinity,
+                          height: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(
-                                Icons.eco_rounded,
-                                color: primaryColor,
-                                size: 40,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: const Color(0xFFF1F5F2),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.eco_rounded,
+                                    color: primaryColor,
+                                    size: 40,
+                                  ),
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Badge Status (Organik / Panen Baru)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: item['tagBg'] as Color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item['tag'] as String,
-                        style: sSemiBold.copyWith(
-                          color: item['tagColor'] as Color,
-                          fontSize: 9,
                         ),
                       ),
                     ),
@@ -705,18 +896,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     top: 6,
                     right: 6,
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.favorite_border_rounded,
-                        size: 16,
-                        color: Color(0xFF94A3B8),
-                      ),
+                    child: BlocBuilder<FavoriteCubit, FavoriteState>(
+                      builder: (context, favState) {
+                        final isFav = context.read<FavoriteCubit>().isFavorite(
+                          item.id,
+                        );
+
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            context.read<FavoriteCubit>().toggleFavorite(item);
+                          },
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: isFav
+                                  ? const Color(0xFFFEE2E2)
+                                  : Colors.white.withValues(alpha: 0.9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 16,
+                              color: isFav
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -730,7 +941,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['name'] as String,
+                    item.nama,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: sBold.copyWith(
@@ -740,7 +951,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    item['unit'] as String,
+                    item.deskripsi,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: xsRegular.copyWith(
                       color: const Color(0xFF94A3B8),
                       fontSize: 11,
@@ -753,26 +966,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (item['originalPrice'] != null)
-                            Text(
-                              'Rp ${item['originalPrice']}',
-                              style: xsRegular.copyWith(
-                                color: const Color(0xFFCBD5E1),
-                                fontSize: 10,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          Text(
-                            'Rp ${item['price']}',
-                            style: sBold.copyWith(
-                              color: primaryColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Rp ${NumberFormat('#,###', 'id_ID').format(item.harga)}',
+                        style: sBold.copyWith(
+                          color: primaryColor,
+                          fontSize: 14,
+                        ),
                       ),
 
                       // Tombol Tambah Hijau Kapsul
@@ -788,10 +987,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onTap: () {
+                              context.read<CartCubit>().addItem(
+                                item,
+                                quantity: 1,
+                              );
+                              ScaffoldMessenger.of(
+                                context,
+                              ).hideCurrentSnackBar();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    '${item['name']} ditambahkan ke keranjang',
+                                    '${item.nama} ditambahkan ke keranjang',
                                     style: sMedium.copyWith(
                                       color: Colors.white,
                                     ),

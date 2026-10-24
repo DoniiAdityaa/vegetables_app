@@ -2,8 +2,13 @@ import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vegetables_app/auth/auth_gate.dart';
 import 'package:vegetables_app/config/service_locator.dart';
+import 'package:vegetables_app/feature/cart/cubit/cart_cubit.dart';
+import 'package:vegetables_app/feature/favorite/cubit/favorite_cubit.dart';
+import 'package:vegetables_app/feature/home/cubit/category_cubit.dart';
+import 'package:vegetables_app/feature/home/cubit/vegetable_cubit.dart';
 import 'package:vegetables_app/firebase_options.dart';
 import 'package:vegetables_app/ui/theme.dart';
 
@@ -26,11 +31,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Vegetables App',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const AuthGate(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<VegetableCubit>(
+          create: (context) =>
+              serviceLocator.get<VegetableCubit>()..getVegetables(),
+        ),
+        BlocProvider<CategoryCubit>(
+          create: (context) =>
+              serviceLocator.get<CategoryCubit>()..getCategories(),
+        ),
+        BlocProvider<CartCubit>(
+          create: (context) => serviceLocator.get<CartCubit>()..loadCart(),
+        ),
+        BlocProvider<FavoriteCubit>(
+          create: (context) =>
+              serviceLocator.get<FavoriteCubit>()..loadFavorites(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Vegetables App',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const AuthGate(),
+      ),
     );
   }
 }

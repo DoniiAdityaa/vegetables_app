@@ -20,6 +20,129 @@ class _ApiService implements ApiService {
 
   final ParseErrorLogger? errorLogger;
 
+  @override
+  Future<HttpResponse<ApiResponse<List<VegetableModel>>>> getVegetables({
+    String? kategori,
+    String? cari,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'kategori': kategori,
+      r'cari': cari,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options =
+        _setStreamType<HttpResponse<ApiResponse<List<VegetableModel>>>>(
+          Options(method: 'GET', headers: _headers, extra: _extra)
+              .compose(
+                _dio.options,
+                '/vegetables',
+                queryParameters: queryParameters,
+                data: _data,
+              )
+              .copyWith(
+                baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+              ),
+        );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiResponse<List<VegetableModel>> _value;
+    try {
+      _value = ApiResponse<List<VegetableModel>>.fromJson(
+        _result.data!,
+        (json) => json is List<dynamic>
+            ? json
+                  .map<VegetableModel>(
+                    (i) => VegetableModel.fromJson(i as Map<String, dynamic>),
+                  )
+                  .toList()
+            : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<ApiResponse<VegetableDetailModel>>> getVegetableDetail({
+    required int id,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options =
+        _setStreamType<HttpResponse<ApiResponse<VegetableDetailModel>>>(
+          Options(method: 'GET', headers: _headers, extra: _extra)
+              .compose(
+                _dio.options,
+                '/vegetables/${id}',
+                queryParameters: queryParameters,
+                data: _data,
+              )
+              .copyWith(
+                baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+              ),
+        );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiResponse<VegetableDetailModel> _value;
+    try {
+      _value = ApiResponse<VegetableDetailModel>.fromJson(
+        _result.data!,
+        (json) => VegetableDetailModel.fromJson(json as Map<String, dynamic>),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<ApiResponse<List<CategoryModel>>>> getCategories() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options =
+        _setStreamType<HttpResponse<ApiResponse<List<CategoryModel>>>>(
+          Options(method: 'GET', headers: _headers, extra: _extra)
+              .compose(
+                _dio.options,
+                '/vegetables/categories',
+                queryParameters: queryParameters,
+                data: _data,
+              )
+              .copyWith(
+                baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+              ),
+        );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ApiResponse<List<CategoryModel>> _value;
+    try {
+      _value = ApiResponse<List<CategoryModel>>.fromJson(
+        _result.data!,
+        (json) => json is List<dynamic>
+            ? json
+                  .map<CategoryModel>(
+                    (i) => CategoryModel.fromJson(i as Map<String, dynamic>),
+                  )
+                  .toList()
+            : List.empty(),
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
     if (T != dynamic &&
         !(requestOptions.responseType == ResponseType.bytes ||

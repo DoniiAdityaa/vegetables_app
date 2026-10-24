@@ -322,7 +322,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   Text(
                     title,
                     style: sBold.copyWith(
-                      color: isDone ? textNeutralPrimary : const Color(0xFF94A3B8),
+                      color: isDone
+                          ? textNeutralPrimary
+                          : const Color(0xFF94A3B8),
                       fontSize: 13,
                     ),
                   ),
@@ -400,40 +402,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             Text(
               'Pesanan Saya',
               style: sBold.copyWith(color: textNeutralPrimary, fontSize: 22),
-            ),
-            // Info Help Button
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.help_outline_rounded,
-                  size: 20,
-                  color: Color(0xFF64748B),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Pusat bantuan pesanan & garansi kesegaran 100%',
-                        style: sMedium.copyWith(color: Colors.white),
-                      ),
-                      backgroundColor: primaryColor,
-                      duration: const Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-                tooltip: 'Pusat Bantuan',
-              ),
             ),
           ],
         ],

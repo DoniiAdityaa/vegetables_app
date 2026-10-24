@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:vegetables_app/config/service_locator.dart';
 import 'package:vegetables_app/config/user_preference.dart';
+import 'package:vegetables_app/feature/favorite/favorite_screen.dart';
 import 'package:vegetables_app/feature/login/login_screen.dart';
 import 'package:vegetables_app/feature/profile/edit_profile_screen.dart';
 import 'package:vegetables_app/feature/profile/faq_screen.dart';
@@ -369,6 +370,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
+          // 1. Sayuran Favorit
+          _buildMenuItemTile(
+            icon: Icons.favorite_rounded,
+            iconColor: const Color(0xFFEF4444),
+            iconBgColor: pastelRed,
+            title: 'Sayuran Favorit',
+            subtitle: 'Daftar produk sayur yang kamu sukai',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoriteScreen()),
+              );
+            },
+          ),
+          const Divider(color: Color(0xFFF1F5F9), height: 1, thickness: 1),
+
           // 2. FAQ (Pusat Bantuan)
           _buildMenuItemTile(
             icon: Icons.help_outline_rounded,

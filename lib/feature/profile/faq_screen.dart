@@ -66,16 +66,20 @@ class _FaqScreenState extends State<FaqScreen> {
           children: [
             // 1. TOP HEADER (Back Button + Title)
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const AppBackButton(),
                   Text(
                     'Pusat Bantuan & FAQ',
-                    style:
-                        sBold.copyWith(color: textNeutralPrimary, fontSize: 18),
+                    style: sBold.copyWith(
+                      color: textNeutralPrimary,
+                      fontSize: 18,
+                    ),
                   ),
                   const SizedBox(width: 42), // Balance spacer
                 ],
@@ -84,68 +88,15 @@ class _FaqScreenState extends State<FaqScreen> {
 
             const SizedBox(height: 12),
 
-            // 2. SEARCH FAQ INPUT
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAF8),
-                  borderRadius: BorderRadius.circular(24),
-                  border:
-                      Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.search_rounded,
-                      color: Color(0xFF94A3B8),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        style: sRegular.copyWith(
-                          color: textNeutralPrimary,
-                          fontSize: 13,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Cari pertanyaan atau bantuan...',
-                          hintStyle: sRegular.copyWith(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    if (_searchQuery.isNotEmpty)
-                      GestureDetector(
-                        onTap: () => setState(() => _searchQuery = ''),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: Color(0xFF94A3B8),
-                          size: 18,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
             // 3. FAQ ACCORDION LIST
             Expanded(
               child: faqs.isEmpty
                   ? Center(
                       child: Text(
                         'Pertanyaan tidak ditemukan',
-                        style:
-                            sRegular.copyWith(color: const Color(0xFF94A3B8)),
+                        style: sRegular.copyWith(
+                          color: const Color(0xFF94A3B8),
+                        ),
                       ),
                     )
                   : ListView.separated(
@@ -156,7 +107,6 @@ class _FaqScreenState extends State<FaqScreen> {
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         if (index == faqs.length) {
-                          // CS Banner at the bottom
                           return _buildCsBanner();
                         }
 
@@ -172,9 +122,9 @@ class _FaqScreenState extends State<FaqScreen> {
                             ),
                           ),
                           child: Theme(
-                            data: Theme.of(context).copyWith(
-                              dividerColor: Colors.transparent,
-                            ),
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: Colors.transparent),
                             child: ExpansionTile(
                               tilePadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
